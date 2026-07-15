@@ -208,7 +208,7 @@ int board_fdt_blob_setup(void **fdtp)
 {
 	struct fdt_header *external_fdt, *internal_fdt;
 	bool internal_valid, external_valid;
-	int ret = -ENODATA;
+	int ret = 0, err = -ENODATA;
 
 	internal_fdt = (struct fdt_header *)*fdtp;
 	external_fdt = (struct fdt_header *)get_prev_bl_fdt_addr();
@@ -223,31 +223,11 @@ int board_fdt_blob_setup(void **fdtp)
 		panic("Internal FDT is invalid and no external FDT was provided! (fdt=%#llx)\n",
 		      (phys_addr_t)external_fdt);
 
-	/* Prefer memory information from internal DT if it's present */
-	if (internal_valid)
-		ret = qcom_parse_memory(internal_fdt);
-
-	if (ret < 0 && external_valid) {
-		/* No internal FDT or it lacks a proper /memory node.
-		 * The previous bootloader handed us something, let's try that.
-		 */
-		if (internal_valid)
-			debug("No memory info in internal FDT, falling back to external\n");
-
-		ret = qcom_parse_memory(external_fdt);
-	}
-
-	if (ret < 0)
-		panic("No valid memory ranges found!\n");
-
 	/* If we have an external FDT, it can only have come from the Android bootloader. */
 	if (external_valid)
 		qcom_boot_source = QCOM_BOOT_SOURCE_ANDROID;
 	else
 		qcom_boot_source = QCOM_BOOT_SOURCE_XBL;
-
-	debug("ram_base = %#011lx, ram_size = %#011llx\n",
-	      gd->ram_base, gd->ram_size);
 
 	if (internal_valid) {
 		debug("Using built in FDT\n");
@@ -255,10 +235,37 @@ int board_fdt_blob_setup(void **fdtp)
 	} else {
 		debug("Using external FDT\n");
 		*fdtp = external_fdt;
-		ret = 0;
+		/* Make the external FDT visible to ofnode so the memory
+		 * node can be parsed before fdtdec_setup() updates this.
+		 */
+		gd->fdt_blob = external_fdt;
+
+		qcom_psci_fixup(*fdtp);
 	}
 
-	qcom_psci_fixup(*fdtp);
+	/*
+	 * Parse the /memory node while we're here,
+	 * this makes it easy to do other things early.
+	 * Prefer memory information from the internal DT if it's present.
+	 */
+	if (internal_valid)
+		err = qcom_parse_memory(internal_fdt);
+
+	if (err < 0 && external_valid) {
+		/* No internal FDT or it lacks a proper /memory node.
+		 * The previous bootloader handed us something, let's try that.
+		 */
+		if (internal_valid)
+			debug("No memory info in internal FDT, falling back to external\n");
+
+		err = qcom_parse_memory(external_fdt);
+	}
+
+	if (err < 0)
+		panic("No valid memory ranges found!\n");
+
+	debug("ram_base = %#011lx, ram_size = %#011llx\n",
+	      gd->ram_base, gd->ram_size);
 
 	return ret;
 }

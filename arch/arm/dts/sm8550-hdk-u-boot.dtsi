@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: BSD-3-Clause
+
+/ {
+	/* The upstream DT leaves the memory size empty for the
+	 * bootloader to fill in. When running as the primary
+	 * bootloader there is no prior stage to populate the
+	 * memory layout for us, so provide it here.
+	 */
+	/delete-node/ memory@a0000000;
+
+	memory@bab00000 {
+		device_type = "memory";
+		reg = <0x0 0xbab00000 0x0 0x0d1b8000>,
+		      <0x8 0x80000000 0x0 0x39a00000>,
+		      <0x8 0xc0000000 0x1 0x40000000>;
+	};
+};
+
+// RAM Entry 0 : Base 0x00bab00000  Size 0x000d1b8000
+// RAM Entry 1 : Base 0x0880000000  Size 0x0039a00000
+// RAM Entry 2 : Base 0x08c0000000  Size 0x0140000000
