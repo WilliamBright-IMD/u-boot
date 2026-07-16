@@ -1,21 +1,32 @@
 // SPDX-License-Identifier: BSD-3-Clause
-
+/*
+ * Copyright (c) 2026, IMD Technologies Ltd. All rights reserved.
+ */
 / {
-	/* The upstream DT leaves the memory size empty for the
-	 * bootloader to fill in. When running as the primary
-	 * bootloader there is no prior stage to populate the
-	 * memory layout for us, so provide it here.
-	 */
 	/delete-node/ memory@a0000000;
 
-	memory@bab00000 {
+	memory@81200000 {
 		device_type = "memory";
-		reg = <0x0 0xbab00000 0x0 0x0d1b8000>,
-		      <0x8 0x80000000 0x0 0x39a00000>,
-		      <0x8 0xc0000000 0x1 0x40000000>;
+		reg = <0x0 0x81200000 0x0 0x00800000>,
+		      <0x0 0x81cf4000 0x0 0x0000c000>,
+		      <0x0 0x81f20000 0x0 0x006e0000>,
+		      <0x0 0x86e00000 0x0 0x03a00000>,
+		      <0x0 0x9b09c000 0x0 0x00064000>,
+		      <0x0 0xa2a80000 0x0 0x32000000>,
+		      <0x8 0x88000000 0x0 0x39a00000>,
+		      <0x8 0x8c000000 0x0 0xd8000000>;
 	};
 };
 
-// RAM Entry 0 : Base 0x00bab00000  Size 0x000d1b8000
-// RAM Entry 1 : Base 0x0880000000  Size 0x0039a00000
-// RAM Entry 2 : Base 0x08c0000000  Size 0x0140000000
+/* XBL memory region dump:
+ *
+ * Bank 0 : 0x0081200000  Size 0x00800000
+ * Bank 1 : 0x0081cf4000  Size 0x0000c000
+ * Bank 2 : 0x0081f20000  Size 0x006e0000
+ * Bank 3 : 0x0086e00000  Size 0x03a00000
+ * Bank 4 : 0x009b09c000  Size 0x00064000
+ * Bank 5 : 0x00a2a80000  Size 0x32000000 
+ * Bank 6 : 0x0880000000  Size 0x39a00000
+ * Bank 7 : 0x08c0000000  Size 0xd8000000
+ *
+ */
